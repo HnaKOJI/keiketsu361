@@ -16,10 +16,32 @@
     .result-box { border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 5px; }
     .correct { color: green; }
     .wrong { color: red; }
-    .summary-box { margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
-    .back-button-container { margin-top: 20px; display: flex; justify-content: center; }
+    .summary-box { margin-bottom: 100px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+    .back-button-container { margin-top: 20px; margin-bottom: 100px; display: flex; justify-content: center; }
     .result-correct { background-color: #e0ffe0; }
     .result-wrong { background-color: #ffe0e0; }
+
+    /* 回答＋正解＋結果まとめ用 */
+    .answer-block {
+      display: grid;
+      gap: 6px;
+      margin: 8px 0;
+      margin-left: 40px;
+    }
+
+    .answer-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 10px;
+    }
+
+    .answer-label {
+      font-weight: bold;
+    }
+
+    .answer-text {
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
@@ -33,7 +55,7 @@
     <div class="question" id="question"></div>
     <div class="options" id="options"></div>
     <div class="nav" id="navButtons">
-      <button onclick="prevQuestion()">前の問題</button>
+      <button id="prevButton" onclick="prevQuestion()">前の問題</button>
       <button onclick="backToCategory()">カテゴリ選択に戻る</button>
     </div>
     <div id="result"></div>
@@ -119,19 +141,23 @@
       shuffle(filtered);
 
       for (let q of filtered) {
-        const correct = answers[q.category][q.id];
+        let correctList = answers[q.category][q.id];
+        if (!Array.isArray(correctList)) correctList = [correctList];
+        const correct = correctList[0];
+
         let wrong = [];
 
         if (!isNaN(parseInt(category))) {
           const categoryAnswers = answers[category];
           wrong = Object.entries(categoryAnswers)
-            .filter(([id, ans]) => id !== q.id)
-            .map(([id, ans]) => ans);
+            .filter(([id]) => id !== q.id)
+            .map(([id, ans]) => Array.isArray(ans) ? ans[0] : ans);
         } else {
           for (const cat in answers) {
             for (const id in answers[cat]) {
               if (id !== q.id) {
-                wrong.push(answers[cat][id]);
+                const ans = answers[cat][id];
+                wrong.push(Array.isArray(ans) ? ans[0] : ans);
               }
             }
           }
@@ -140,7 +166,7 @@
         shuffle(wrong);
         const options = [correct, ...wrong.slice(0, 3)];
         shuffle(options);
-        quizData.push({ ...q, options, correct });
+        quizData.push({ ...q, options, correct: correctList });
       }
 
       document.getElementById("result").innerText = "";
@@ -161,6 +187,7 @@
         optionsDiv.appendChild(btn);
       }
       document.getElementById("navButtons").style.display = "flex";
+      document.getElementById("prevButton").style.display = currentIndex === 0 ? "none" : "inline-block";
     }
 
     function answer(choice) {
@@ -188,39 +215,48 @@
 
     function finishQuiz() {
       let correctCount = 0;
-      quizData.forEach((q, i) => {
-        if (userAnswers[i] === q.correct) correctCount++;
-      });
-      const percent = correctCount / quizData.length;
-
       const resultDiv = document.getElementById("result");
       resultDiv.innerHTML = "";
 
       const summary = document.createElement("div");
       summary.className = "summary-box";
+
+      quizData.forEach((q, i) => {
+        const correctList = Array.isArray(q.correct) ? q.correct : [q.correct];
+        const isCorrect = correctList.includes(userAnswers[i]);
+        if (isCorrect) correctCount++;
+
+        const box = document.createElement("div");
+        box.className = `result-box ${isCorrect ? "result-correct" : "result-wrong"}`;
+        const resultText = isCorrect ? "正解" : "不正解";
+        const resultColor = isCorrect ? "correct" : "wrong";
+        const correctText = correctList.join("<br>");
+
+        box.innerHTML = `<strong>${i + 1}. ${q.text}</strong><br>
+          <div class="answer-block">
+            <div class="answer-row">
+              <div class="answer-label">あなたの答え:</div>
+              <div class="answer-text">${userAnswers[i]}</div>
+            </div>
+            <div class="answer-row">
+              <div class="answer-label">正解:</div>
+              <div class="answer-text">${correctText}</div>
+            </div>
+            <div class="answer-row">
+              <div class="answer-label">結果:</div>
+              <div class="answer-text"><span class="${resultColor}">${resultText}</span></div>
+            </div>
+          </div>`;
+        resultDiv.appendChild(box);
+      });
+
+      const percent = correctCount / quizData.length;
       summary.innerHTML = `<strong>点数: ${correctCount}/${quizData.length}</strong><br>結果: ${percent >= 0.6 ? "合格" : "ざんねん"}`;
+      resultDiv.prepend(summary);
 
       document.getElementById("question").style.display = "none";
       document.getElementById("options").style.display = "none";
       document.getElementById("navButtons").style.display = "none";
-
-      const detail = document.createElement("div");
-      quizData.forEach((q, i) => {
-        const box = document.createElement("div");
-        const isCorrect = userAnswers[i] === q.correct;
-        box.className = `result-box ${isCorrect ? "result-correct" : "result-wrong"}`;
-        const userAns = userAnswers[i];
-        const correct = q.correct;
-        const result = isCorrect ? "<span class='correct'>正解</span>" : "<span class='wrong'>不正解</span>";
-        box.innerHTML = `<strong>${i + 1}. ${q.text}</strong><br>
-          あなたの答え: ${userAns}<br>
-          正解: ${correct}<br>
-          結果: ${result}`;
-        detail.appendChild(box);
-      });
-
-      resultDiv.appendChild(summary);
-      resultDiv.appendChild(detail);
 
       const backContainer = document.createElement("div");
       backContainer.className = "back-button-container";
