@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>四択クイズ</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+    .question { font-size: 1.2em; margin: 20px 0; }
+    .options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .options button { width: 100%; height: 60px; font-size: 1em; }
+    .category { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 10px 0; }
+    .category button { width: 100%; }
+    .nav { margin: 10px 0; display: flex; flex-wrap: wrap; gap: 10px; }
+    #result { white-space: pre-wrap; }
+    .result-box { border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    .correct { color: green; }
+    .wrong { color: red; }
+    .summary-box { margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+    .back-button-container { margin-top: 20px; display: flex; justify-content: center; }
+    .result-correct { background-color: #e0ffe0; }
+    .result-wrong { background-color: #ffe0e0; }
+  </style>
+</head>
+<body>
+  <h1>四択クイズ</h1>
+
+  <div id="categoryPage">
+    <div class="category" id="categoryButtons"></div>
+  </div>
+
+  <div id="quizPage" style="display:none">
+    <div class="question" id="question"></div>
+    <div class="options" id="options"></div>
+    <div class="nav" id="navButtons">
+      <button onclick="prevQuestion()">前の問題</button>
+      <button onclick="backToCategory()">カテゴリ選択に戻る</button>
+    </div>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    let questions = [];
+    let answers = {};
+    let currentIndex = 0;
+    let quizData = [];
+    let userAnswers = [];
+    let history = [];
+    let currentCategory = "";
+
+    async function loadFiles() {
+      const qRes = await fetch("questions.json");
+      const rawQuestions = await qRes.json();
+      questions = [];
+      for (const cat in rawQuestions) {
+        for (const q of rawQuestions[cat]) {
+          questions.push({ ...q, category: cat });
+        }
+      }
+      const aRes = await fetch("choices.json");
+      answers = await aRes.json();
+      showCategoryButtons();
+    }
+
+    function showCategoryButtons() {
+      const container = document.getElementById("categoryButtons");
+      container.innerHTML = "";
+      const buttons = [
+        { label: "全問", value: "all" },
+        { label: "ランダム15問", value: "random" },
+        { label: "ランダム30問", value: "30" },
+        { label: "ランダム45問", value: "45" },
+        { label: "ランダム60問", value: "60" },
+      ];
+      for (let i = 1; i <= 15; i++) {
+        buttons.push({ label: `カテゴリ${i}`, value: String(i) });
+      }
+      buttons.forEach(btn => {
+        const b = document.createElement("button");
+        b.textContent = btn.label;
+        b.onclick = () => startQuiz(btn.value);
+        container.appendChild(b);
+      });
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function startQuiz(category) {
+      currentCategory = category;
+      document.getElementById("categoryPage").style.display = "none";
+      document.getElementById("quizPage").style.display = "block";
+
+      quizData = [];
+      userAnswers = [];
+      currentIndex = 0;
+      history = [];
+
+      let filtered = questions;
+      if (!isNaN(parseInt(category))) {
+        filtered = questions.filter(q => q.category == category);
+      }
+      if (category === "random") {
+        filtered = questions.slice();
+        shuffle(filtered);
+        filtered = filtered.slice(0, 15);
+      } else if (["15", "30", "45", "60"].includes(category)) {
+        filtered = questions.slice();
+        shuffle(filtered);
+        filtered = filtered.slice(0, parseInt(category));
+      } else if (category === "all") {
+        filtered = questions.slice();
+      }
+
+      shuffle(filtered);
+
+      for (let q of filtered) {
+        const correct = answers[q.category][q.id];
+        let wrong = [];
+
+        if (!isNaN(parseInt(category))) {
+          const categoryAnswers = answers[category];
+          wrong = Object.entries(categoryAnswers)
+            .filter(([id, ans]) => id !== q.id)
+            .map(([id, ans]) => ans);
+        } else {
+          for (const cat in answers) {
+            for (const id in answers[cat]) {
+              if (id !== q.id) {
+                wrong.push(answers[cat][id]);
+              }
+            }
+          }
+        }
+
+        shuffle(wrong);
+        const options = [correct, ...wrong.slice(0, 3)];
+        shuffle(options);
+        quizData.push({ ...q, options, correct });
+      }
+
+      document.getElementById("result").innerText = "";
+      showQuestion();
+    }
+
+    function showQuestion() {
+      const q = quizData[currentIndex];
+      document.getElementById("question").style.display = "block";
+      document.getElementById("options").style.display = "grid";
+      document.getElementById("question").innerText = `${currentIndex + 1}. ${q.text}`;
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+      for (let opt of q.options) {
+        const btn = document.createElement("button");
+        btn.textContent = opt;
+        btn.onclick = () => answer(opt);
+        optionsDiv.appendChild(btn);
+      }
+      document.getElementById("navButtons").style.display = "flex";
+    }
+
+    function answer(choice) {
+      userAnswers[currentIndex] = choice;
+      history.push(currentIndex);
+      if (currentIndex < quizData.length - 1) {
+        currentIndex++;
+        showQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+    function prevQuestion() {
+      if (history.length > 0) {
+        currentIndex = history.pop();
+        showQuestion();
+      }
+    }
+
+    function backToCategory() {
+      document.getElementById("quizPage").style.display = "none";
+      document.getElementById("categoryPage").style.display = "block";
+    }
+
+    function finishQuiz() {
+      let correctCount = 0;
+      quizData.forEach((q, i) => {
+        if (userAnswers[i] === q.correct) correctCount++;
+      });
+      const percent = correctCount / quizData.length;
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "";
+
+      const summary = document.createElement("div");
+      summary.className = "summary-box";
+      summary.innerHTML = `<strong>点数: ${correctCount}/${quizData.length}</strong><br>結果: ${percent >= 0.6 ? "合格" : "ざんねん"}`;
+
+      document.getElementById("question").style.display = "none";
+      document.getElementById("options").style.display = "none";
+      document.getElementById("navButtons").style.display = "none";
+
+      const detail = document.createElement("div");
+      quizData.forEach((q, i) => {
+        const box = document.createElement("div");
+        const isCorrect = userAnswers[i] === q.correct;
+        box.className = `result-box ${isCorrect ? "result-correct" : "result-wrong"}`;
+        const userAns = userAnswers[i];
+        const correct = q.correct;
+        const result = isCorrect ? "<span class='correct'>正解</span>" : "<span class='wrong'>不正解</span>";
+        box.innerHTML = `<strong>${i + 1}. ${q.text}</strong><br>
+          あなたの答え: ${userAns}<br>
+          正解: ${correct}<br>
+          結果: ${result}`;
+        detail.appendChild(box);
+      });
+
+      resultDiv.appendChild(summary);
+      resultDiv.appendChild(detail);
+
+      const backContainer = document.createElement("div");
+      backContainer.className = "back-button-container";
+      const backBtn = document.createElement("button");
+      backBtn.textContent = "カテゴリ選択に戻る";
+      backBtn.onclick = backToCategory;
+      backContainer.appendChild(backBtn);
+      resultDiv.appendChild(backContainer);
+    }
+
+    loadFiles();
+  </script>
+</body>
+</html>
