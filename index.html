@@ -3,462 +3,274 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="./style.css">
   <title>四択クイズ</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      max-width: 600px;
-      margin: auto;
-      padding: 20px;
-    }
-    .question {
-      font-size: 1.2em;
-      margin: 20px 0;
-    }
-    .options {
-      display: grid;
-      grid-template-columns: repeat(1fr);
-      gap: 10px;
-    }
-    @media (min-width: 700px) {
-      .options {
-        grid-template-columns: repeat(2, 1fr); /* 700px以上で2列に切り替え */
-      }
-    }
-
-    button {
-      cursor: pointer;
-      border: none;
-      background-color: #eee;
-      border-radius: 5px;
-      padding: 10px 20px;
-      font-size: 1em;
-    }
-    button:hover {
-      background-color: #ddd;
-    }
-
-    .options button {
-      width: 100%;
-      min-height: 60px;
-      font-size: 1em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      white-space: normal; /* 複数行許可 */
-      padding: 10px;
-    }
-    
-    #searchResult {  /* 経穴名検索 */
-      display: none; /* ← 初期は非表示 */
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 10px;
-      background-color: #f9f9f9;
-      margin-top: 10px;
-    }
-
-    .category {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px; margin: 10px 0;
-    }
-    .category button {
-      width: 100%;
-      height: 60px;
-    }
-    .nav {
-      margin: 10px 0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    #result {
-      white-space: pre-wrap;
-    }
-    .result-box {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-    }
-    .correct {
-      color: green;
-    }
-    .wrong {
-      color: red;
-    }
-    .summary-box {
-      margin-bottom: 20px;
-      display: flex;
-      flex-direction:
-      column;
-      gap: 10px;
-      align-items: center;
-    }
-    .back-button-container {
-      margin-top: 20px;
-      margin-bottom: 100px;
-      display: flex;
-      justify-content: center;
-    }
-    .result-correct {
-      background-color: #e0ffe0;
-    }
-    .result-wrong {
-      background-color: #ffe0e0;
-    }
-
-    /* 回答＋正解＋結果まとめ用 */
-    .answer-block {
-      display: grid;
-      gap: 6px;
-      margin: 8px 0;
-      margin-left: 10px;
-    }
-    /* @media (min-width: 700px) {
-      .answer-block {
-        display: grid;
-        gap: 6px;
-        margin: 8px 0;
-        margin-left: 40px;
-      }
-    } */
-    .answer-row {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 4px 10px;
-    }
-
-    .answer-label {
-      font-weight: bold;
-    }
-
-    .answer-text {
-      white-space: pre-wrap;
-    }
-  </style>
 </head>
 <body>
-  <h1>四択クイズ</h1>
+<!-- クイズのタイトル -->
+<h1>四択クイズ</h1>
 
-  <div id="categoryPage"><!-- 経穴名検索 -->
-    <form id="searchForm" action="search.html" method="get" target="_blank" style="margin-bottom: 20px;">
-      <h2>経穴検索</h2>
+<!-- カテゴリページ全体 -->
+<div id="categoryPage">
+  <!-- 検索フォーム（経穴・経脈名） -->
+  <form id="searchForm" action="search.html" method="get" target="_blank" style="margin-bottom: 20px;">
+    <h2>経穴検索</h2>
+    <div class="search-controls">
       <input type="text" name="keyword" placeholder="経穴名 または 経脈名" required />
-      <label><input type="radio" name="mode" value="point" checked> 経穴名で検索</label>
-      <label><input type="radio" name="mode" value="meridian"> 経脈名で検索</label>
-      <button type="submit">検索</button>
-    </form>
-
-    <div class="category" id="categoryButtons"></div>
-  </div>
-
-  <div id="categoryPage">
-    <div class="category" id="categoryButtons"></div>
-  </div>
-
-  <div id="quizPage" style="display:none">
-    <div class="question" id="question"></div>
-    <div class="options" id="options"></div>
-    <div class="nav" id="navButtons">
-      <button id="prevButton" onclick="prevQuestion()">前の問題</button>
-      <button onclick="backToCategory()">カテゴリ選択に戻る</button>
+      <div class="search-bottom-row">
+        <label><input type="radio" name="mode" value="point" checked> 経穴名で検索</label>
+        <label><input type="radio" name="mode" value="meridian"> 経脈名で検索</label>
+        <button type="submit">検索</button>
+      </div>
     </div>
-    <div id="result"></div>
+  </form>
+
+  <!-- カテゴリボタンのコンテナ -->
+  <div class="category" id="categoryButtons"></div>
+</div>
+
+<!-- クイズページ（問題・選択肢・ナビ・結果） -->
+<div id="quizPage" style="display:none">
+  <div class="question" id="question"></div>
+  <div class="options" id="options"></div>
+  <div class="nav" id="navButtons">
+    <button id="prevButton" onclick="prevQuestion()">前の問題</button>
+    <button onclick="backToCategory()">カテゴリ選択に戻る</button>
   </div>
+  <div id="result"></div>
+</div>
 
-  <script>//検索ボックス
+<!-- スクリプト：クイズ機能とデータ読み込み -->
+<script>
+  // カテゴリ名の一覧（表示用ラベル）
+  const categoryNames = {
+    "1": "督脈",
+    "2": "任脈",
+    "3": "手の太陰肺経",
+    "4": "手の陽明大腸経",
+    "5": "足の陽明胃経",
+    "6": "足の太陰脾経",
+    "7": "手の少陰心経",
+    "8": "手の太陽小腸経",
+    "9": "足の太陽膀胱経",
+    "10": "足の少陰腎経",
+    "11": "手の厥陰心包経",
+    "12": "手の少陽三焦経",
+    "13": "足の少陽胆経",
+    "14": "足の厥陰肝経",
+    "15": "奇穴"
+  };
 
-    function searchPoint() {
-      const keyword = document.getElementById("searchInput").value.trim();
-      const mode = document.querySelector('input[name="searchMode"]:checked').value;
-      const resultDiv = document.getElementById("searchResult");
-      resultDiv.style.display = "none";
+  // クイズ用データの初期化
+  let questions = [];      // 全問題一覧
+  let answers = {};        // 正解一覧
+  let currentIndex = 0;    // 現在の問題インデックス
+  let quizData = [];       // 出題中の問題データ
+  let userAnswers = [];    // ユーザーの回答履歴
+  let history = [];        // 戻る用の履歴
+  let currentCategory = ""; // 現在選択中のカテゴリ
 
-      if (!keyword) return;
-
-      // 経穴名で検索
-      if (mode === "point") {
-        let found = false;
-        for (const cat in answers) {
-          const catAnswers = answers[cat];
-          if (catAnswers && catAnswers[keyword]) {
-            const meanings = Array.isArray(catAnswers[keyword])
-              ? catAnswers[keyword].join("<br>")
-              : catAnswers[keyword];
-            resultDiv.innerHTML = `<strong>${keyword}</strong><br>${meanings}`;
-            resultDiv.style.display = "block";
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          resultDiv.innerHTML = `<span style='color: red;'>「${keyword}」は見つかりませんでした。</span>`;
-          resultDiv.style.display = "block";
-        }
-      }
-
-      // 経脈名で検索
-      if (mode === "meridian") {
-        const matchedCategory = Object.entries(categoryNames).find(
-          ([_, name]) => name === keyword
-        );
-        if (!matchedCategory) {
-          resultDiv.innerHTML = `<span style='color: red;'>「${keyword}」という経脈は見つかりませんでした。</span>`;
-          resultDiv.style.display = "block";
-          return;
-        }
-
-        const [catNum, catName] = matchedCategory;
-        const questionList = questions.filter(q => q.category === catNum);
-        const catAnswers = answers[catNum];
-
-        if (!questionList.length || !catAnswers) {
-          resultDiv.innerHTML = `<span style='color: red;'>「${keyword}」の経穴データが見つかりませんでした。</span>`;
-          resultDiv.style.display = "block";
-          return;
-        }
-
-        const list = questionList.map(q => {
-          const answer = Array.isArray(catAnswers[q.id]) ? catAnswers[q.id].join("<br>") : catAnswers[q.id];
-          return `<strong>${q.id}</strong><br>${answer}`;
-        }).join("<hr>");
-
-        resultDiv.innerHTML = `<h3>${keyword} の経穴一覧</h3>${list}`;
-        resultDiv.style.display = "block";
+  // 質問・回答ファイルの読み込み
+  async function loadFiles() {
+    const qRes = await fetch("questions.json");
+    const rawQuestions = await qRes.json();
+    questions = [];
+    for (const cat in rawQuestions) {
+      for (const q of rawQuestions[cat]) {
+        questions.push({ ...q, category: cat }); // カテゴリを保持
       }
     }
+    const aRes = await fetch("choices.json");
+    answers = await aRes.json();
+    showCategoryButtons();
+  }
 
-    const categoryNames = {
-      "1": "督脈",  // 例：督脈（とくみゃく）
-      "2": "任脈",
-      "3": "手の太陰肺経",
-      "4": "手の陽明大腸経",
-      "5": "足の陽明胃経",
-      "6": "足の太陰脾経",
-      "7": "手の少陰心経",
-      "8": "手の太陽小腸経",
-      "9": "足の太陽膀胱経",
-      "10": "足の少陰腎経",
-      "11": "手の厥陰心包経",
-      "12": "手の少陽三焦経",
-      "13": "足の少陽胆経",
-      "14": "足の厥陰肝経",
-      "15": "奇穴"
-    };
-
-    let questions = [];
-    let answers = {};
-    let currentIndex = 0;
-    let quizData = [];
-    let userAnswers = [];
-    let history = [];
-    let currentCategory = "";
-
-    async function loadFiles() {
-      const qRes = await fetch("questions.json");
-      const rawQuestions = await qRes.json();
-      questions = [];
-      for (const cat in rawQuestions) {
-        for (const q of rawQuestions[cat]) {
-          questions.push({ ...q, category: cat });
-        }
-      }
-      const aRes = await fetch("choices.json");
-      answers = await aRes.json();
-      showCategoryButtons();
+  // カテゴリボタンを表示
+  function showCategoryButtons() {
+    const container = document.getElementById("categoryButtons");
+    container.innerHTML = "";
+    const buttons = [
+      { label: "全問", value: "all" },
+      { label: "ランダム15問", value: "random" },
+      { label: "ランダム30問", value: "30" },
+      { label: "ランダム45問", value: "45" },
+      { label: "ランダム60問", value: "60" }
+    ];
+    for (const key in categoryNames) {
+      buttons.push({ label: categoryNames[key], value: key });
     }
+    buttons.forEach(btn => {
+      const b = document.createElement("button");
+      b.textContent = btn.label;
+      b.onclick = () => startQuiz(btn.value);
+      container.appendChild(b);
+    });
+  }
 
-    function showCategoryButtons() {
-      const container = document.getElementById("categoryButtons");
-      container.innerHTML = "";
-      const buttons = [
-        { label: "全問", value: "all" },
-        { label: "ランダム15問", value: "random" },
-        { label: "ランダム30問", value: "30" },
-        { label: "ランダム45問", value: "45" },
-        { label: "ランダム60問", value: "60" },
-      ];
-
-       // カテゴリ名一覧から動的に追加
-      for (const key in categoryNames) {
-        buttons.push({ label: categoryNames[key], value: key });
-      }
-
-      buttons.forEach(btn => {
-        const b = document.createElement("button");
-        b.textContent = btn.label;
-        b.onclick = () => startQuiz(btn.value);
-        container.appendChild(b);
-      });
+  // 配列をシャッフルするユーティリティ関数
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
     }
+  }
 
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
+  // クイズ開始処理
+  function startQuiz(category) {
+    currentCategory = category;
+    document.getElementById("categoryPage").style.display = "none";
+    document.getElementById("quizPage").style.display = "block";
+    quizData = [];
+    userAnswers = [];
+    currentIndex = 0;
+    history = [];
+
+    let filtered = questions;
+    if (!isNaN(parseInt(category))) {
+      filtered = questions.filter(q => q.category == category);
+    } else if (category === "random") {
+      filtered = questions.slice(); shuffle(filtered); filtered = filtered.slice(0, 15);
+    } else if (["15", "30", "45", "60"].includes(category)) {
+      filtered = questions.slice(); shuffle(filtered); filtered = filtered.slice(0, parseInt(category));
+    } else if (category === "all") {
+      filtered = questions.slice();
     }
+    shuffle(filtered);
 
-    function startQuiz(category) {
-      currentCategory = category;
-      document.getElementById("categoryPage").style.display = "none";
-      document.getElementById("quizPage").style.display = "block";
+    // 選択肢を生成し、問題リストを構築
+    for (let q of filtered) {
+      let correctList = answers[q.category][q.id];
+      if (!Array.isArray(correctList)) correctList = [correctList];
+      const correct = correctList[0];
+      let wrong = [];
 
-      quizData = [];
-      userAnswers = [];
-      currentIndex = 0;
-      history = [];
-
-      let filtered = questions;
       if (!isNaN(parseInt(category))) {
-        filtered = questions.filter(q => q.category == category);
-      }
-      if (category === "random") {
-        filtered = questions.slice();
-        shuffle(filtered);
-        filtered = filtered.slice(0, 15);
-      } else if (["15", "30", "45", "60"].includes(category)) {
-        filtered = questions.slice();
-        shuffle(filtered);
-        filtered = filtered.slice(0, parseInt(category));
-      } else if (category === "all") {
-        filtered = questions.slice();
-      }
-
-      shuffle(filtered);
-
-      for (let q of filtered) {
-        let correctList = answers[q.category][q.id];
-        if (!Array.isArray(correctList)) correctList = [correctList];
-        const correct = correctList[0];
-
-        let wrong = [];
-
-        if (!isNaN(parseInt(category))) {
-          const categoryAnswers = answers[category];
-          wrong = Object.entries(categoryAnswers)
-            .filter(([id]) => id !== q.id)
-            .map(([id, ans]) => Array.isArray(ans) ? ans[0] : ans);
-        } else {
-          for (const cat in answers) {
-            for (const id in answers[cat]) {
-              if (id !== q.id) {
-                const ans = answers[cat][id];
-                wrong.push(Array.isArray(ans) ? ans[0] : ans);
-              }
+        const categoryAnswers = answers[category];
+        wrong = Object.entries(categoryAnswers).filter(([id]) => id !== q.id).map(([id, ans]) => Array.isArray(ans) ? ans[0] : ans);
+      } else {
+        for (const cat in answers) {
+          for (const id in answers[cat]) {
+            if (id !== q.id) {
+              const ans = answers[cat][id];
+              wrong.push(Array.isArray(ans) ? ans[0] : ans);
             }
           }
         }
-
-        shuffle(wrong);
-        const options = [correct, ...wrong.slice(0, 3)];
-        shuffle(options);
-        quizData.push({ ...q, options, correct: correctList });
       }
 
-      document.getElementById("result").innerText = "";
+      shuffle(wrong);
+      const options = [correct, ...wrong.slice(0, 3)];
+      shuffle(options);
+      quizData.push({ ...q, options, correct: correctList });
+    }
+
+    document.getElementById("result").innerText = "";
+    showQuestion();
+  }
+
+  // 問題と選択肢を表示
+  function showQuestion() {
+    const q = quizData[currentIndex];
+    document.getElementById("question").style.display = "block";
+    document.getElementById("options").style.display = "grid";
+    document.getElementById("question").innerText = `${currentIndex + 1}. ${q.text}`;
+
+    const optionsDiv = document.getElementById("options");
+    optionsDiv.innerHTML = "";
+    for (let opt of q.options) {
+      const btn = document.createElement("button");
+      btn.textContent = opt;
+      btn.onclick = () => answer(opt);
+      optionsDiv.appendChild(btn);
+    }
+
+    document.getElementById("navButtons").style.display = "flex";
+    document.getElementById("prevButton").style.display = currentIndex === 0 ? "none" : "inline-block";
+  }
+
+  // 選択肢をクリックした時の処理
+  function answer(choice) {
+    userAnswers[currentIndex] = choice;
+    history.push(currentIndex);
+    if (currentIndex < quizData.length - 1) {
+      currentIndex++;
+      showQuestion();
+    } else {
+      finishQuiz();
+    }
+  }
+
+  // 「前の問題」ボタンの処理
+  function prevQuestion() {
+    if (history.length > 0) {
+      currentIndex = history.pop();
       showQuestion();
     }
+  }
 
-    function showQuestion() {
-      const q = quizData[currentIndex];
-      document.getElementById("question").style.display = "block";
-      document.getElementById("options").style.display = "grid";
-      document.getElementById("question").innerText = `${currentIndex + 1}. ${q.text}`;
-      const optionsDiv = document.getElementById("options");
-      optionsDiv.innerHTML = "";
-      for (let opt of q.options) {
-        const btn = document.createElement("button");
-        btn.textContent = opt;
-        btn.onclick = () => answer(opt);
-        optionsDiv.appendChild(btn);
-      }
-      document.getElementById("navButtons").style.display = "flex";
-      document.getElementById("prevButton").style.display = currentIndex === 0 ? "none" : "inline-block";
-    }
+  // 「カテゴリ選択に戻る」ボタンの処理
+  function backToCategory() {
+    document.getElementById("quizPage").style.display = "none";
+    document.getElementById("categoryPage").style.display = "block";
+  }
 
-    function answer(choice) {
-      userAnswers[currentIndex] = choice;
-      history.push(currentIndex);
-      if (currentIndex < quizData.length - 1) {
-        currentIndex++;
-        showQuestion();
-      } else {
-        finishQuiz();
-      }
-    }
+  // クイズ終了時に結果を表示
+  function finishQuiz() {
+    let correctCount = 0;
+    const resultDiv = document.getElementById("result");
+    resultDiv.innerHTML = "";
+    const summary = document.createElement("div");
+    summary.className = "summary-box";
 
-    function prevQuestion() {
-      if (history.length > 0) {
-        currentIndex = history.pop();
-        showQuestion();
-      }
-    }
+    quizData.forEach((q, i) => {
+      const correctList = Array.isArray(q.correct) ? q.correct : [q.correct];
+      const isCorrect = correctList.includes(userAnswers[i]);
+      if (isCorrect) correctCount++;
 
-    function backToCategory() {
-      document.getElementById("quizPage").style.display = "none";
-      document.getElementById("categoryPage").style.display = "block";
-    }
+      const box = document.createElement("div");
+      box.className = `result-box ${isCorrect ? "result-correct" : "result-wrong"}`;
+      const resultText = isCorrect ? "正解" : "不正解";
+      const resultColor = isCorrect ? "correct" : "wrong";
+      const correctText = correctList.join("<br>");
 
-    function finishQuiz() {
-      let correctCount = 0;
-      const resultDiv = document.getElementById("result");
-      resultDiv.innerHTML = "";
+      box.innerHTML = `<strong>${i + 1}. ${q.text}</strong><br>
+        <div class="answer-block">
+          <div class="answer-row">
+            <div class="answer-label">あなたの答え:</div>
+            <div class="answer-text">${userAnswers[i]}</div>
+          </div>
+          <div class="answer-row">
+            <div class="answer-label">正解:</div>
+            <div class="answer-text">${correctText}</div>
+          </div>
+          <div class="answer-row">
+            <div class="answer-label">結果:</div>
+            <div class="answer-text"><span class="${resultColor}">${resultText}</span></div>
+          </div>
+        </div>`;
 
-      const summary = document.createElement("div");
-      summary.className = "summary-box";
+      resultDiv.appendChild(box);
+    });
 
-      quizData.forEach((q, i) => {
-        const correctList = Array.isArray(q.correct) ? q.correct : [q.correct];
-        const isCorrect = correctList.includes(userAnswers[i]);
-        if (isCorrect) correctCount++;
+    const percent = correctCount / quizData.length;
+    summary.innerHTML = `<strong>点数: ${correctCount}/${quizData.length}</strong><br>結果: ${percent >= 0.6 ? "合格" : "ざんねん"}`;
+    resultDiv.prepend(summary);
 
-        const box = document.createElement("div");
-        box.className = `result-box ${isCorrect ? "result-correct" : "result-wrong"}`;
-        const resultText = isCorrect ? "正解" : "不正解";
-        const resultColor = isCorrect ? "correct" : "wrong";
-        const correctText = correctList.join("<br>");
+    document.getElementById("question").style.display = "none";
+    document.getElementById("options").style.display = "none";
+    document.getElementById("navButtons").style.display = "none";
 
-        box.innerHTML = `<strong>${i + 1}. ${q.text}</strong><br>
-          <div class="answer-block">
-            <div class="answer-row">
-              <div class="answer-label">あなたの答え:</div>
-              <div class="answer-text">${userAnswers[i]}</div>
-            </div>
-            <div class="answer-row">
-              <div class="answer-label">正解:</div>
-              <div class="answer-text">${correctText}</div>
-            </div>
-            <div class="answer-row">
-              <div class="answer-label">結果:</div>
-              <div class="answer-text"><span class="${resultColor}">${resultText}</span></div>
-            </div>
-          </div>`;
-        resultDiv.appendChild(box);
-      });
+    const backContainer = document.createElement("div");
+    backContainer.className = "back-button-container";
+    const backBtn = document.createElement("button");
+    backBtn.textContent = "カテゴリ選択に戻る";
+    backBtn.onclick = backToCategory;
+    backContainer.appendChild(backBtn);
+    resultDiv.appendChild(backContainer);
+  }
 
-      const percent = correctCount / quizData.length;
-      summary.innerHTML = `<strong>点数: ${correctCount}/${quizData.length}</strong><br>結果: ${percent >= 0.6 ? "合格" : "ざんねん"}`;
-      resultDiv.prepend(summary);
-
-      document.getElementById("question").style.display = "none";
-      document.getElementById("options").style.display = "none";
-      document.getElementById("navButtons").style.display = "none";
-
-      const backContainer = document.createElement("div");
-      backContainer.className = "back-button-container";
-      const backBtn = document.createElement("button");
-      backBtn.textContent = "カテゴリ選択に戻る";
-      backBtn.onclick = backToCategory;
-      backContainer.appendChild(backBtn);
-      resultDiv.appendChild(backContainer);
-    }
-
-    loadFiles();
-  </script>
+  // 初期化処理：データ読み込み実行
+  loadFiles();
+</script>
 </body>
 </html>
-
