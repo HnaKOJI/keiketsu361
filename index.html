@@ -7,10 +7,36 @@
   <style>
     body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; }
     .question { font-size: 1.2em; margin: 20px 0; }
-    .options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .options button { width: 100%; height: 60px; font-size: 1em; }
-    .category { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 10px 0; }
-    .category button { width: 100%; }
+    .options {
+      display: grid;
+      grid-template-columns: repeat(1fr);
+      gap: 10px;
+    }
+    @media (min-width: 700px) {
+      .options {
+        grid-template-columns: repeat(2, 1fr); /* 700px以上で2列に切り替え */
+      }
+    }
+    .options button {
+      width: 100%;
+      min-height: 60px;
+      font-size: 1em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      white-space: normal; /* 複数行許可 */
+      padding: 10px;
+    }
+    .category {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px; margin: 10px 0;
+    }
+    .category button {
+      width: 100%;
+      height: 60px;
+    }
     .nav { margin: 10px 0; display: flex; flex-wrap: wrap; gap: 10px; }
     #result { white-space: pre-wrap; }
     .result-box { border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 5px; }
@@ -62,6 +88,24 @@
   </div>
 
   <script>
+    const categoryNames = {
+      "1": "督脈",  // 例：督脈（とくみゃく）
+      "2": "任脈",
+      "3": "手の太陰肺経",
+      "4": "手の陽明大腸経",
+      "5": "足の陽明胃経",
+      "6": "足の太陰脾経",
+      "7": "手の少陰心経",
+      "8": "手の太陽小腸経",
+      "9": "足の太陽膀胱経",
+      "10": "足の少陰腎経",
+      "11": "手の厥陰心包経",
+      "12": "手の少陽三焦経",
+      "13": "足の少陽胆経",
+      "14": "足の厥陰肝経",
+      "15": "奇穴"
+    };
+
     let questions = [];
     let answers = {};
     let currentIndex = 0;
@@ -94,9 +138,12 @@
         { label: "ランダム45問", value: "45" },
         { label: "ランダム60問", value: "60" },
       ];
-      for (let i = 1; i <= 15; i++) {
-        buttons.push({ label: `カテゴリ${i}`, value: String(i) });
+
+       // カテゴリ名一覧から動的に追加
+      for (const key in categoryNames) {
+        buttons.push({ label: categoryNames[key], value: key });
       }
+
       buttons.forEach(btn => {
         const b = document.createElement("button");
         b.textContent = btn.label;
