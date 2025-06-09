@@ -175,3 +175,8 @@
     .answer-text {
       white-space: pre-wrap;
     }
+    /* 検索結果画面 */
+    #search-body {
+        max-width: none;
+        margin: 0 50px;
+    }
