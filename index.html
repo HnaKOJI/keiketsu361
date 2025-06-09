@@ -5,8 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>四択クイズ</title>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; }
-    .question { font-size: 1.2em; margin: 20px 0; }
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+    .question {
+      font-size: 1.2em;
+      margin: 20px 0;
+    }
     .options {
       display: grid;
       grid-template-columns: repeat(1fr);
@@ -17,6 +25,19 @@
         grid-template-columns: repeat(2, 1fr); /* 700px以上で2列に切り替え */
       }
     }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background-color: #eee;
+      border-radius: 5px;
+      padding: 10px 20px;
+      font-size: 1em;
+    }
+    button:hover {
+      background-color: #ddd;
+    }
+
     .options button {
       width: 100%;
       min-height: 60px;
@@ -28,6 +49,16 @@
       white-space: normal; /* 複数行許可 */
       padding: 10px;
     }
+    
+    #searchResult {  /* 経穴名検索 */
+      display: none; /* ← 初期は非表示 */
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      background-color: #f9f9f9;
+      margin-top: 10px;
+    }
+
     .category {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -37,24 +68,63 @@
       width: 100%;
       height: 60px;
     }
-    .nav { margin: 10px 0; display: flex; flex-wrap: wrap; gap: 10px; }
-    #result { white-space: pre-wrap; }
-    .result-box { border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 5px; }
-    .correct { color: green; }
-    .wrong { color: red; }
-    .summary-box { margin-bottom: 100px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
-    .back-button-container { margin-top: 20px; margin-bottom: 100px; display: flex; justify-content: center; }
-    .result-correct { background-color: #e0ffe0; }
-    .result-wrong { background-color: #ffe0e0; }
+    .nav {
+      margin: 10px 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    #result {
+      white-space: pre-wrap;
+    }
+    .result-box {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    .correct {
+      color: green;
+    }
+    .wrong {
+      color: red;
+    }
+    .summary-box {
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction:
+      column;
+      gap: 10px;
+      align-items: center;
+    }
+    .back-button-container {
+      margin-top: 20px;
+      margin-bottom: 100px;
+      display: flex;
+      justify-content: center;
+    }
+    .result-correct {
+      background-color: #e0ffe0;
+    }
+    .result-wrong {
+      background-color: #ffe0e0;
+    }
 
     /* 回答＋正解＋結果まとめ用 */
     .answer-block {
       display: grid;
       gap: 6px;
       margin: 8px 0;
-      margin-left: 40px;
+      margin-left: 10px;
     }
-
+    /* @media (min-width: 700px) {
+      .answer-block {
+        display: grid;
+        gap: 6px;
+        margin: 8px 0;
+        margin-left: 40px;
+      }
+    } */
     .answer-row {
       display: grid;
       grid-template-columns: auto 1fr;
@@ -73,6 +143,18 @@
 <body>
   <h1>四択クイズ</h1>
 
+  <div id="categoryPage"><!-- 経穴名検索 -->
+    <form id="searchForm" action="search.html" method="get" target="_blank" style="margin-bottom: 20px;">
+      <h2>経穴検索</h2>
+      <input type="text" name="keyword" placeholder="経穴名 または 経脈名" required />
+      <label><input type="radio" name="mode" value="point" checked> 経穴名で検索</label>
+      <label><input type="radio" name="mode" value="meridian"> 経脈名で検索</label>
+      <button type="submit">検索</button>
+    </form>
+
+    <div class="category" id="categoryButtons"></div>
+  </div>
+
   <div id="categoryPage">
     <div class="category" id="categoryButtons"></div>
   </div>
@@ -87,7 +169,68 @@
     <div id="result"></div>
   </div>
 
-  <script>
+  <script>//検索ボックス
+
+    function searchPoint() {
+      const keyword = document.getElementById("searchInput").value.trim();
+      const mode = document.querySelector('input[name="searchMode"]:checked').value;
+      const resultDiv = document.getElementById("searchResult");
+      resultDiv.style.display = "none";
+
+      if (!keyword) return;
+
+      // 経穴名で検索
+      if (mode === "point") {
+        let found = false;
+        for (const cat in answers) {
+          const catAnswers = answers[cat];
+          if (catAnswers && catAnswers[keyword]) {
+            const meanings = Array.isArray(catAnswers[keyword])
+              ? catAnswers[keyword].join("<br>")
+              : catAnswers[keyword];
+            resultDiv.innerHTML = `<strong>${keyword}</strong><br>${meanings}`;
+            resultDiv.style.display = "block";
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          resultDiv.innerHTML = `<span style='color: red;'>「${keyword}」は見つかりませんでした。</span>`;
+          resultDiv.style.display = "block";
+        }
+      }
+
+      // 経脈名で検索
+      if (mode === "meridian") {
+        const matchedCategory = Object.entries(categoryNames).find(
+          ([_, name]) => name === keyword
+        );
+        if (!matchedCategory) {
+          resultDiv.innerHTML = `<span style='color: red;'>「${keyword}」という経脈は見つかりませんでした。</span>`;
+          resultDiv.style.display = "block";
+          return;
+        }
+
+        const [catNum, catName] = matchedCategory;
+        const questionList = questions.filter(q => q.category === catNum);
+        const catAnswers = answers[catNum];
+
+        if (!questionList.length || !catAnswers) {
+          resultDiv.innerHTML = `<span style='color: red;'>「${keyword}」の経穴データが見つかりませんでした。</span>`;
+          resultDiv.style.display = "block";
+          return;
+        }
+
+        const list = questionList.map(q => {
+          const answer = Array.isArray(catAnswers[q.id]) ? catAnswers[q.id].join("<br>") : catAnswers[q.id];
+          return `<strong>${q.id}</strong><br>${answer}`;
+        }).join("<hr>");
+
+        resultDiv.innerHTML = `<h3>${keyword} の経穴一覧</h3>${list}`;
+        resultDiv.style.display = "block";
+      }
+    }
+
     const categoryNames = {
       "1": "督脈",  // 例：督脈（とくみゃく）
       "2": "任脈",
@@ -318,3 +461,4 @@
   </script>
 </body>
 </html>
+
