@@ -238,3 +238,29 @@
     .answer-text {
       white-space: pre-wrap;
     }
+
+    /* アプデ情報 */
+    .update-box {
+      background-color: #f7f7f7;
+      border: 2px solid #ff4f4f;
+      border-radius: 10px;
+      padding: 15px 20px;
+      margin: 20px 0;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .update-box h2 {
+      margin-top: 0;
+      font-size: 1.2em;
+      color: #333;
+    }
+
+    .update-box ul {
+      padding-left: 20px;
+      margin: 10px 0 0 0;
+    }
+
+    .update-box li {
+      margin-bottom: 5px;
+      line-height: 1.5;
+    }
