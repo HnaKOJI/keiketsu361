@@ -17,13 +17,32 @@
     <h2>経穴検索</h2>
     <div class="search-controls">
       <input type="text" name="keyword" placeholder="経穴名 または 経脈名" required />
-      <div class="search-bottom-row">
-        <label><input type="radio" name="mode" value="point" checked> 経穴名で検索</label>
-        <label><input type="radio" name="mode" value="meridian"> 経脈名で検索</label>
+      <div class="button-container">
         <button type="submit">検索</button>
       </div>
     </div>
   </form>
+  <h2>経脈名で直接検索</h2>
+    <div class="dropdown-container">
+      <select id="meridianSelect" class="styled-select">
+        <option value="">-- 経脈を選択 --</option>
+        <option value="督脈">督脈</option>
+        <option value="任脈">任脈</option>
+        <option value="手の太陰肺経">手の太陰肺経</option>
+        <option value="手の陽明大腸経">手の陽明大腸経</option>
+        <option value="足の陽明胃経">足の陽明胃経</option>
+        <option value="足の太陰脾経">足の太陰脾経</option>
+        <option value="手の少陰心経">手の少陰心経</option>
+        <option value="手の太陽小腸経">手の太陽小腸経</option>
+        <option value="足の太陽膀胱経">足の太陽膀胱経</option>
+        <option value="足の少陰腎経">足の少陰腎経</option>
+        <option value="手の厥陰心包経">手の厥陰心包経</option>
+        <option value="手の少陽三焦経">手の少陽三焦経</option>
+        <option value="足の少陽胆経">足の少陽胆経</option>
+        <option value="足の厥陰肝経">足の厥陰肝経</option>
+        <option value="奇穴">奇穴</option>
+      </select>
+    </div>
 
   <!-- カテゴリボタンのコンテナ -->
   <div class="category" id="categoryButtons"></div>
@@ -42,6 +61,16 @@
 
 <!-- スクリプト：クイズ機能とデータ読み込み -->
 <script>
+  //検索欄
+  document.getElementById("meridianSelect").addEventListener("change", function() {
+    const selected = this.value;
+    if (selected) {
+      // 経脈名はkeywordに入れてmodeはmeridian
+      const url = `search.html?mode=meridian&keyword=${encodeURIComponent(selected)}`;
+      window.location.href = url;
+    }
+  });
+
   // カテゴリ名の一覧（表示用ラベル）
   const categoryNames = {
     "1": "督脈",
@@ -117,74 +146,74 @@
 
   // クイズ開始処理
   // ここは実際のカテゴリIDの配列に置き換えてください
-const categoryIdList = ["1", "2", "3", "4", "7", "8", "11", "12"];  
+  const categoryIdList = ["1", "2", "3", "4", "7", "8", "11", "12"];  
 
-function startQuiz(category) {
+  function startQuiz(category) {
 
-  console.log("startQuiz category:", category);
+    console.log("startQuiz category:", category);
 
-  currentCategory = category;
-  document.getElementById("categoryPage").style.display = "none";
-  document.getElementById("quizPage").style.display = "block";
-  quizData = [];
-  userAnswers = [];
-  currentIndex = 0;
-  history = [];
+    currentCategory = category;
+    document.getElementById("categoryPage").style.display = "none";
+    document.getElementById("quizPage").style.display = "block";
+    quizData = [];
+    userAnswers = [];
+    currentIndex = 0;
+    history = [];
 
-  let filtered = [];
+    let filtered = [];
 
-  if (category === "all") {
-    filtered = questions.slice();
-    shuffle(filtered);
-  } else if (categoryIdList.includes(category)) {
-    // カテゴリIDに該当する問題を絞り込み
-    filtered = questions.filter(q => q.category === category);
-    shuffle(filtered);
-  } else if (!isNaN(parseInt(category))) {
-    // 数字だけどカテゴリIDじゃない → 問題数指定として扱う
-    filtered = questions.slice();
-    shuffle(filtered);
-    filtered = filtered.slice(0, parseInt(category));
-  } else {
-    // その他の文字列カテゴリの場合の処理（あれば）
-    filtered = questions.filter(q => q.category === category);
-    shuffle(filtered);
-  }
-
-  // 以下、選択肢作成の処理は変えずに
-  for (let q of filtered) {
-    let correctList = answers[q.category][q.id];
-    if (!Array.isArray(correctList)) correctList = [correctList];
-    const correct = correctList[0];
-    let wrong = [];
-
-    if (categoryIdList.includes(category)) {
-      // 同カテゴリの回答から不正解を集める
-      const categoryAnswers = answers[category];
-      wrong = Object.entries(categoryAnswers)
-        .filter(([id]) => id !== q.id)
-        .map(([id, ans]) => Array.isArray(ans) ? ans[0] : ans);
+    if (category === "all") {
+      filtered = questions.slice();
+      shuffle(filtered);
+    } else if (categoryIdList.includes(category)) {
+      // カテゴリIDに該当する問題を絞り込み
+      filtered = questions.filter(q => q.category === category);
+      shuffle(filtered);
+    } else if (!isNaN(parseInt(category))) {
+      // 数字だけどカテゴリIDじゃない → 問題数指定として扱う
+      filtered = questions.slice();
+      shuffle(filtered);
+      filtered = filtered.slice(0, parseInt(category));
     } else {
-      // 全カテゴリから不正解を集める
-      for (const cat in answers) {
-        for (const id in answers[cat]) {
-          if (id !== q.id) {
-            const ans = answers[cat][id];
-            wrong.push(Array.isArray(ans) ? ans[0] : ans);
+      // その他の文字列カテゴリの場合の処理（あれば）
+      filtered = questions.filter(q => q.category === category);
+      shuffle(filtered);
+    }
+
+    // 以下、選択肢作成の処理は変えずに
+    for (let q of filtered) {
+      let correctList = answers[q.category][q.id];
+      if (!Array.isArray(correctList)) correctList = [correctList];
+      const correct = correctList[0];
+      let wrong = [];
+
+      if (categoryIdList.includes(category)) {
+        // 同カテゴリの回答から不正解を集める
+        const categoryAnswers = answers[category];
+        wrong = Object.entries(categoryAnswers)
+          .filter(([id]) => id !== q.id)
+          .map(([id, ans]) => Array.isArray(ans) ? ans[0] : ans);
+      } else {
+        // 全カテゴリから不正解を集める
+        for (const cat in answers) {
+          for (const id in answers[cat]) {
+            if (id !== q.id) {
+              const ans = answers[cat][id];
+              wrong.push(Array.isArray(ans) ? ans[0] : ans);
+            }
           }
         }
       }
+
+      shuffle(wrong);
+      const options = [correct, ...wrong.slice(0, 3)];
+      shuffle(options);
+      quizData.push({ ...q, options, correct: correctList });
     }
 
-    shuffle(wrong);
-    const options = [correct, ...wrong.slice(0, 3)];
-    shuffle(options);
-    quizData.push({ ...q, options, correct: correctList });
+    document.getElementById("result").innerText = "";
+    showQuestion();
   }
-
-  document.getElementById("result").innerText = "";
-  showQuestion();
-}
 
   // 問題と選択肢を表示
   function showQuestion() {
