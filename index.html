@@ -2,62 +2,65 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="./style.css">
   <title>四択クイズ</title>
 </head>
 <body>
-<!-- クイズのタイトル -->
-<h1>四択クイズ</h1>
+  <div class="container">
+    <!-- クイズのタイトル -->
+    <h1>四択クイズ</h1>
 
-<!-- カテゴリページ全体 -->
-<div id="categoryPage">
-  <!-- 検索フォーム（経穴・経脈名） -->
-  <form id="searchForm" action="search.html" method="get" style="margin-bottom: 20px;">
-    <h2>経穴検索</h2>
-    <div class="search-controls">
-      <input type="text" name="keyword" placeholder="経穴名 または 経脈名" required />
-      <div class="button-container">
-        <button type="submit">検索</button>
+    <!-- カテゴリページ全体 -->
+    <div id="categoryPage">
+      <!-- 検索フォーム（経穴・経脈名） -->
+      <form id="searchForm" action="search.html" method="get" style="margin-bottom: 20px;">
+        <h2>経穴検索</h2>
+        <div class="search-controls">
+          <input type="text" name="keyword" placeholder="経穴名 または 経脈名" required />
+          <div class="button-container">
+            <button type="submit">検索</button>
+          </div>
+        </div>
+      </form>
+      <h2>経脈名で直接検索</h2>
+        <div class="dropdown-container">
+          <select id="meridianSelect" class="styled-select">
+            <option value="">-- 経脈を選択 --</option>
+            <option value="督脈">督脈</option>
+            <option value="任脈">任脈</option>
+            <option value="手の太陰肺経">手の太陰肺経</option>
+            <option value="手の陽明大腸経">手の陽明大腸経</option>
+            <option value="足の陽明胃経">足の陽明胃経</option>
+            <option value="足の太陰脾経">足の太陰脾経</option>
+            <option value="手の少陰心経">手の少陰心経</option>
+            <option value="手の太陽小腸経">手の太陽小腸経</option>
+            <option value="足の太陽膀胱経">足の太陽膀胱経</option>
+            <option value="足の少陰腎経">足の少陰腎経</option>
+            <option value="手の厥陰心包経">手の厥陰心包経</option>
+            <option value="手の少陽三焦経">手の少陽三焦経</option>
+            <option value="足の少陽胆経">足の少陽胆経</option>
+            <option value="足の厥陰肝経">足の厥陰肝経</option>
+            <option value="奇穴">奇穴</option>
+          </select>
+        </div>
+
+      <!-- カテゴリボタンのコンテナ -->
+      <div class="category" id="categoryButtons"></div>
+    </div>
+
+    <!-- クイズページ（問題・選択肢・ナビ・結果） -->
+    <div id="quizPage" style="display:none">
+      <div class="question" id="question"></div>
+      <div class="options" id="options"></div>
+      <div class="nav" id="navButtons">
+        <button id="prevButton" onclick="prevQuestion()">前の問題</button>
+        <button onclick="backToCategory()">カテゴリ選択に戻る</button>
       </div>
+      <div id="result"></div>
     </div>
-  </form>
-  <h2>経脈名で直接検索</h2>
-    <div class="dropdown-container">
-      <select id="meridianSelect" class="styled-select">
-        <option value="">-- 経脈を選択 --</option>
-        <option value="督脈">督脈</option>
-        <option value="任脈">任脈</option>
-        <option value="手の太陰肺経">手の太陰肺経</option>
-        <option value="手の陽明大腸経">手の陽明大腸経</option>
-        <option value="足の陽明胃経">足の陽明胃経</option>
-        <option value="足の太陰脾経">足の太陰脾経</option>
-        <option value="手の少陰心経">手の少陰心経</option>
-        <option value="手の太陽小腸経">手の太陽小腸経</option>
-        <option value="足の太陽膀胱経">足の太陽膀胱経</option>
-        <option value="足の少陰腎経">足の少陰腎経</option>
-        <option value="手の厥陰心包経">手の厥陰心包経</option>
-        <option value="手の少陽三焦経">手の少陽三焦経</option>
-        <option value="足の少陽胆経">足の少陽胆経</option>
-        <option value="足の厥陰肝経">足の厥陰肝経</option>
-        <option value="奇穴">奇穴</option>
-      </select>
-    </div>
-
-  <!-- カテゴリボタンのコンテナ -->
-  <div class="category" id="categoryButtons"></div>
-</div>
-
-<!-- クイズページ（問題・選択肢・ナビ・結果） -->
-<div id="quizPage" style="display:none">
-  <div class="question" id="question"></div>
-  <div class="options" id="options"></div>
-  <div class="nav" id="navButtons">
-    <button id="prevButton" onclick="prevQuestion()">前の問題</button>
-    <button onclick="backToCategory()">カテゴリ選択に戻る</button>
   </div>
-  <div id="result"></div>
-</div>
+
 
 <!-- スクリプト：クイズ機能とデータ読み込み -->
 <script>
