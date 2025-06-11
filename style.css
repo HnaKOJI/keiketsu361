@@ -1,5 +1,4 @@
-
-    /* 全体の基本スタイル */
+/* 全体の基本スタイル */
     body {
       margin: 0;
       padding: 0;
@@ -153,12 +152,6 @@
       outline: none;
       box-shadow: none;
     }
-    /* 選択肢ボタンの選択状態 */
-    .options button.selected {
-      background-color: #dddddd;
-      border: 2px solid #000;
-    }
-
 
     /* カテゴリボタンの配置と大きさ */
     .category {
