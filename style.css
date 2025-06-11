@@ -1,3 +1,4 @@
+
     /* 全体の基本スタイル */
     body {
       margin: 0;
@@ -147,6 +148,10 @@
       text-align: center;
       white-space: normal;
       padding: 10px;
+    }
+    .options button:focus {
+      outline: none;
+      box-shadow: none;
     }
 
     /* カテゴリボタンの配置と大きさ */
