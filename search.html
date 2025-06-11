@@ -12,7 +12,6 @@
   <script>
     const params = new URLSearchParams(location.search);
     const keyword = params.get("keyword");
-    const mode = params.get("mode") || "point";
 
     async function loadData() {
       const [qRes, aRes] = await Promise.all([
@@ -32,32 +31,10 @@
       const results = document.getElementById("results");
       results.innerHTML = "";
 
-      if (mode === "point") {
-        let found = false;
-        for (const cat in answersData) {
-          if (answersData[cat][keyword]) {
-            const answer = Array.isArray(answersData[cat][keyword])
-              ? answersData[cat][keyword].join("<br>")
-              : answersData[cat][keyword];
-            results.innerHTML = `<div class="result-box">
-              <strong>${keyword}</strong><br>${answer}
-            </div>`;
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          results.innerHTML = `<div class="result-box">「${keyword}」は見つかりませんでした。</div>`;
-        }
-      }
+      // 経脈名の完全一致検索
+      const catEntry = Object.entries(categoryNames).find(([_, name]) => name === keyword);
 
-      if (mode === "meridian") {
-        const catEntry = Object.entries(categoryNames).find(([_, name]) => name === keyword);
-        if (!catEntry) {
-          results.innerHTML = `<div class="result-box">「${keyword}」という経脈は見つかりませんでした。</div>`;
-          return;
-        }
-
+      if (catEntry) {
         const [catNum] = catEntry;
         const list = questionsData[catNum] || [];
         const ansMap = answersData[catNum] || {};
@@ -78,15 +55,57 @@
             results.appendChild(box);
           }
         }
+        return;
+      }
+
+      // 経穴IDの完全一致検索
+      let found = false;
+      for (const cat in answersData) {
+        if (answersData[cat][keyword]) {
+          const answer = Array.isArray(answersData[cat][keyword])
+            ? answersData[cat][keyword].join("<br>")
+            : answersData[cat][keyword];
+          results.innerHTML = `<div class="result-box">
+            <strong>${keyword}</strong><br>${answer}
+          </div>`;
+          found = true;
+          break;
+        }
+      }
+      if (found) return;
+
+      // 取穴部位の部分一致検索（関連語彙検索）
+      let partialResults = [];
+      for (const cat in answersData) {
+        for (const id in answersData[cat]) {
+          const ans = answersData[cat][id];
+          const text = Array.isArray(ans) ? ans.join(" ") : ans;
+          if (text.includes(keyword)) {
+            partialResults.push({ id, text });
+          }
+        }
+      }
+
+      if (partialResults.length > 0) {
+        results.innerHTML = `<h2>「${keyword}」に関連する経穴</h2>`;
+        for (const item of partialResults) {
+          const box = document.createElement("div");
+          box.className = "result-box";
+          box.innerHTML = `<strong>${item.id}</strong><br>${item.text}`;
+          results.appendChild(box);
+        }
+      } else {
+        results.innerHTML = `<div class="result-box">「${keyword}」は見つかりませんでした。</div>`;
       }
     }
 
     loadData();
   </script>
-    <div style="margin-top: 40px; display: flex; justify-content: center;">
-        <a href="index.html">
-            <button>カテゴリ選択に戻る</button>
-        </a>
-    </div>
+
+  <div style="margin-top: 40px; display: flex; justify-content: center;">
+    <a href="index.html">
+      <button>カテゴリ選択に戻る</button>
+    </a>
+  </div>
 </body>
 </html>
