@@ -231,11 +231,6 @@
   // 問題と選択肢を表示
   function showQuestion() {
 
-    // 1. 問題表示時にアクティブ要素のフォーカス解除
-    if (document.activeElement) {
-      document.activeElement.blur();
-    }
-
     const q = quizData[currentIndex];
     document.getElementById("question").style.display = "block";
     document.getElementById("options").style.display = "grid";
@@ -251,9 +246,15 @@
       optionsDiv.appendChild(btn);
     }
 
+    // ボタン描画が終わった後でフォーカス解除
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
+
     document.getElementById("navButtons").style.display = "flex";
     document.getElementById("prevButton").style.display = currentIndex === 0 ? "none" : "inline-block";
   }
+
 
   // 選択肢をクリックした時の処理
   function answer(choice) {
