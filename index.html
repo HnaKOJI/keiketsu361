@@ -1,4 +1,4 @@
-<!DOCTYPE html>1.10
+<!DOCTYPE html>1.20
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
@@ -133,11 +133,11 @@
     const container = document.getElementById("categoryButtons");
     container.innerHTML = "";
     const buttons = [
-      { label: "全問", value: "all" },
-      { label: "ランダム15問", value: "15" },
-      { label: "ランダム30問", value: "30" },
-      { label: "ランダム45問", value: "45" },
-      { label: "ランダム60問", value: "60" }
+      { label: "全問", value: "random-all" },
+      { label: "ランダム15問", value: "random-15" },
+      { label: "ランダム30問", value: "random-30" },
+      { label: "ランダム45問", value: "random-45" },
+      { label: "ランダム60問", value: "random-60" }
     ];
     for (const key in categoryNames) {
       buttons.push({ label: categoryNames[key], value: key });
@@ -158,13 +158,14 @@
     }
   }
 
-  // クイズ開始処理
+ 
   // ここは実際のカテゴリIDの配列に置き換えてください
   const categoryIdList = ["1", "2", "3", "4", "5", "6", "7", "8", "11", "12", "15",];  
 
+  // クイズ開始処理
   function startQuiz(category) {
 
-    console.log("startQuiz category:", category);
+    //console.log("startQuiz category:", category);
 
     currentCategory = category;
     document.getElementById("categoryPage").style.display = "none";
@@ -176,20 +177,22 @@
 
     let filtered = [];
 
-    if (category === "all") {
+    if (category === "random-all") {
+      // 全問ランダム
       filtered = questions.slice();
       shuffle(filtered);
+    } else if (category.startsWith("random-")) {
+      // ランダム指定問題数
+      const count = parseInt(category.split("-")[1]);
+      filtered = questions.slice();
+      shuffle(filtered);
+      filtered = filtered.slice(0, count);
     } else if (categoryIdList.includes(category)) {
-      // カテゴリIDに該当する問題を絞り込み
+      // カテゴリID別（通常の経脈選択）
       filtered = questions.filter(q => q.category === category);
       shuffle(filtered);
-    } else if (!isNaN(parseInt(category))) {
-      // 数字だけどカテゴリIDじゃない → 問題数指定として扱う
-      filtered = questions.slice();
-      shuffle(filtered);
-      filtered = filtered.slice(0, parseInt(category));
     } else {
-      // その他の文字列カテゴリの場合の処理（あれば）
+      // その他の文字列カテゴリ（将来拡張用）
       filtered = questions.filter(q => q.category === category);
       shuffle(filtered);
     }
